@@ -20,6 +20,7 @@
   "homepage": "https://github.com/4ndresouza/prudutos_api#readme",
   "description": "",
   "dependencies": {
+    "express": "^5.1.0",
     "nodemon": "^3.1.10",
     "pg": "^8.16.3"
   }

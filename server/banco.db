@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS produtos (
+id SERIAL PRIMARY KEY,
+nome VARCHAR(100) NOT NULL,
+preco DECIMAL(10, 2) NOT NULL
+
+
+)
+
+SELECT * FROM produtos
+
+ALTER USER postgres WITH PASSWORD '1234';
+
+INSERT INTRO produtos (nome, preco)VALUES
