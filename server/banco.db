@@ -11,3 +11,16 @@ SELECT * FROM produtos
 ALTER USER postgres WITH PASSWORD '1234';
 
 INSERT INTRO produtos (nome, preco)VALUES
+
+
+
+
+*/ type modulo /*
+porta
+IP
+nome do Banco
+senha
+usuario
+// ferramentas//
+postman
+rest client

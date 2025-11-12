@@ -1,59 +1,119 @@
-import pg from 'pg';
 import express from 'express';
+import pkg from 'pg';
+
+const { Pool } = pkg;
 
 const app = express();
-const { Pool, Client } =pg;
+const port = 3000;
 
-const pool = new Pool ({
-host: 'localhost',
-port: '5432',
-    user: 'postgres',
-password: '123',
-database: 'produtosbd'
+// Middleware para permitir JSON
+app.use(express.json());
 
-
+// Conexão com o banco de dados PostgreSQL
+const pool = new Pool({
+    user: 'postgres',       // seu usuário do banco
+    host: 'localhost',
+    database: 'produtosbd', // nome do banco
+    password: '123',     // sua senha
+    port: 5432,
 });
 
-try{
-await pool.connect();
-console.log('Conectado ao BD com sucesso!');
-}catch (error) {
-console.log(`Erro ao conectar ao banco: ${error}`);
-
-
-
+// Testar conexão com o banco
+try {
+    await pool.connect();
+    console.log('🟢 Conectado ao banco de dados!');
+} catch (err) {
+    console.error('🔴 Erro ao conectar no banco:', err);
 }
 
-/* fazer um select para testar a conexâo */
-const result = await pool.query('SELECT * FROM  produtos');
-console.log(`Resultado ${result}`);
-
-
-/* criando api com express */
-
-app.get('/',(req,res) => {
-res.send ('API de Produtos funcionando!' ) 
+// Rotas básicas
+app.get('/', (req, res) => {
+    res.send('API de Produtos funcionando 🚀');
 });
 
-app.get('/produtos', (req, res) => {
-const result = pool.query('SELECT * FROM produtos')
-res.send(result.rows)
-
+// Listar produtos
+app.get('/produtos', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM produtos');
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 });
 
-app.post('/produtos', (req, res) => {
-    const result = pool.query('SELECT * FROM produtos')
-    res.send(result.rows)
+//Listar produto por id
+app.get('/produto/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const result = await pool.query('SELECT * FROM produtos WHERE id = $1', [id]);
+        res.status (200).json (result.rows[0]);
+        } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+
+})
+
+//Excluir produto por id
+
+app.delete('/produto/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const result = await pool.query('SELECT * FROM produtos WHERE id = $1', [id]);
+        res.sendStatus (204).json (result.rows[0]);
+        } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+
+})
+
+
+
+/* Criando produto */
+app.post('/produto', async (req, res) => {
+    console.log('request:', req.body);
+    const payload = req.body;
+    try {
+        const result = await pool.query(
+            'INSERT INTO produtos (nome, preco) VALUES ($1, $2) RETURNING *',
+            [payload.nome, payload.preco]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
+});
+// Atualizar produto
+app.put('/produtos/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nome, preco } = req.body;
+    try {
+        const result = await pool.query(
+            'UPDATE produtos SET nome=$1, preco=$2 WHERE id=$3 RETURNING *',
+            [nome, preco, id]
+        );
+        res.json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 });
 
-app.put('/produtos', (req, res) => {
-const result = pool.query('SELECT * FROM produtos')
-res.send(result.rows)
+// Deletar produto
+app.delete('/produtos/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM produtos WHERE id=$1', [id]);
+        res.sendStatus(204);
+    } catch (error) {
+        res.status(500).json({ erro: error.message });
+    }
 });
 
-app.delete('/produtos', (req, res) => {
-const result = pool.query('SELECT * FROM produtos')
-res.send(result.rows)
-});
 
-app.listen(5000) 
+
+
+
+// Iniciar servidor
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+});
